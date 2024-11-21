@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Booking</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
+</head>
+<body>
+    <h2>Choose a Slot for Booking</h2>
+    
+    <form id="bookingForm">
+        <label for="date">Select Date:</label>
+        <select id="date" name="date" onchange="loadSlots()">
+            <option value="">--Select a Date--</option>
+            <!-- Available dates will be populated here -->
+        </select><br><br>
+
+        <label for="time">Select Time:</label>
+        <select id="time" name="time">
+            <option value="">--Select a Time--</option>
+            <!-- Available times will be populated based on selected date -->
+        </select><br><br>
+
+        <label for="services">Select Services:</label>
+        <input type="checkbox" name="services" value="Catering"> Catering
+        <input type="checkbox" name="services" value="Artist"> Artist<br><br>
+
+        <button type="submit">Book Slot</button>
+    </form>
+
+    <script>
+        // Define the Airtable API URL and API Key
+        const API_KEY = 'YOUR_API_KEY';
+        const BASE_ID = 'appAy7h5Q4PPWFkdG';
+        const TABLE_NAME = 'Slots'; // Replace with your actual table name
+        const AIRTABLE_URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
+
+        // Load available dates from Airtable
+        async function loadDates() {
+            try {
+                const response = await axios.get(AIRTABLE_URL, {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                const dates = response.data.records;
+                const dateSelect = document.getElementById("date");
+                dates.forEach(slot => {
+                    const option = document.createElement("option");
+                    option.value = slot.fields.Date;
+                    option.textContent = slot.fields.Date;
+                    dateSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error loading dates:", error);
+            }
+        }
+
+        // Load available times for the selected date
+        function loadSlots() {
+            const selectedDate = document.getElementById("date").value;
+            const timeSelect = document.getElementById("time");
+            // Clear existing times
+            timeSelect.innerHTML = '<option value="">--Select a Time--</option>';
+
+            if (selectedDate) {
+                // Filter and display times based on the selected date
+                // This is a basic example, you can modify it to dynamically fetch times for that date from Airtable
+                const times = ["10:00 AM", "2:00 PM", "4:00 PM"]; // Placeholder
+                times.forEach(time => {
+                    const option = document.createElement("option");
+                    option.value = time;
+                    option.textContent = time;
+                    timeSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Handle form submission
+        document.getElementById("bookingForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const date = document.getElementById("date").value;
+            const time = document.getElementById("time").value;
+            const services = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(input => input.value);
+
+            const bookingData = {
+                date: date,
+                time: time,
+                services: services
+            };
+
+            // Log the booking data
+            console.log("Booking Data:", bookingData);
+
+            // Send the data to your server or Airtable for processing
+            // axios.post('/your-endpoint', bookingData);
+        });
+
+        // Load dates on page load
+        loadDates();
+    </script>
+</body>
+</html>
